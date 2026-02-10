@@ -308,7 +308,7 @@ export default function Layout() {
         setTimeout(resolve, ms);
       });
 
-    const checkCollisionAndSwapDirectionsAndScripts = (currentSprites) => {
+    const checkCollisionAndSwapDirections = (currentSprites) => {
       if (hasSwappedOnce) {
         return;
       }
@@ -338,14 +338,6 @@ export default function Layout() {
           if (s.id === idA) return { ...s, directionMultiplier: multB };
           if (s.id === idB) return { ...s, directionMultiplier: multA };
           return s;
-        })
-      );
-
-      setScripts((oldScripts) =>
-        oldScripts.map((script) => {
-          if (script.spriteId === idA) return { ...script, spriteId: idB };
-          if (script.spriteId === idB) return { ...script, spriteId: idA };
-          return script;
         })
       );
 
@@ -412,7 +404,7 @@ export default function Layout() {
                   return sprite;
                 });
 
-                checkCollisionAndSwapDirectionsAndScripts(updated);
+                checkCollisionAndSwapDirections(updated);
                 return updated;
               });
 
@@ -466,7 +458,7 @@ export default function Layout() {
                     y,
                   };
                 });
-                checkCollisionAndSwapDirectionsAndScripts(updated);
+                checkCollisionAndSwapDirections(updated);
                 return updated;
               });
             }
@@ -569,7 +561,11 @@ export default function Layout() {
           scripts={scripts}
           sprites={sprites}
           activeScriptId={activeScriptId}
-          onSelectScript={setActiveScriptId}
+          onSelectScript={(scriptId) => {
+            setActiveScriptId(scriptId);
+            const script = scripts.find((s) => s.id === scriptId);
+            if (script) setSelectedSpriteId(script.spriteId);
+          }}
           onAddCat={handleAddCat}
           onDropBlock={handleDropBlock}
           onChangeBlockValue={handleChangeBlockValue}
