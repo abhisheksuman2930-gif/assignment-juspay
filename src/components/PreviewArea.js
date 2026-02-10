@@ -2,8 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-const GRID_STEP = 10;
-
 export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
@@ -160,7 +158,7 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
           Click on a cat to view its coordinates
         </div>
       </div>
-      <div className="flex-1 bg-gray-50 relative overflow-hidden min-h-0 flex">
+      <div className="flex-1 bg-white relative overflow-hidden min-h-0 flex">
         {stageSize.width > 0 && stageSize.height > 0 && (
           <div className="w-1 flex-shrink-0 bg-gray-200/90 border-r border-gray-300 pointer-events-none" />
         )}
@@ -172,20 +170,8 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
 
           <div
             ref={areaRef}
-            className="flex-1 relative overflow-hidden min-h-0"
+            className="flex-1 relative overflow-hidden min-h-0 bg-white"
           >
-            {stageSize.width > 0 && stageSize.height > 0 && (
-              <div
-                className="absolute inset-0 pointer-events-none opacity-40"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(to right, #94a3b8 1px, transparent 1px),
-                    linear-gradient(to bottom, #94a3b8 1px, transparent 1px)
-                  `,
-                  backgroundSize: `${GRID_STEP}px ${GRID_STEP}px`,
-                }}
-              />
-            )}
             {sprites &&
               sprites.map((sprite) => (
                 <div
@@ -211,6 +197,14 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
                     </div>
                   )}
                   <CatSprite />
+                  <div
+                    className="absolute bottom-0 left-1/2 mt-0.5 text-[10px] font-medium text-gray-600 whitespace-nowrap"
+                    style={{
+                      transform: `translate(-50%, 100%) rotate(${-(sprite.direction || 0)}deg)`,
+                    }}
+                  >
+                    Cat {sprite.id}
+                  </div>
                 </div>
               ))}
           </div>

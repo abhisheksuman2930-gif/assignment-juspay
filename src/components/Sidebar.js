@@ -1,5 +1,4 @@
-import React, { useRef, useState } from "react";
-import Icon from "./Icon";
+import React, { useRef } from "react";
 
 export default function Sidebar() {
   const scrollRef = useRef(null);
@@ -17,19 +16,7 @@ export default function Sidebar() {
       
       </div>
       <div className="p-2 flex flex-col items-stretch">
-      <div ref={(el) => (sectionRefs.current.Events = el)} className="text-xs font-bold text-gray-700 mt-1 mb-1">Events</div>
-      <div
-        className="flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
-        draggable
-        onDragStart={(event) =>
-          handleDragStart(event, "event_when_flag_clicked")
-        }
-      >
-        {"When "}
-        <Icon name="flag" size={15} className="text-green-600 mx-2" />
-        {"clicked"}
-      </div>
-      <div ref={(el) => (sectionRefs.current.Motion = el)} className="text-xs font-bold text-gray-700 mt-3 mb-1">Motion</div>
+      <div ref={(el) => (sectionRefs.current.Motion = el)} className="text-xs font-bold text-gray-700 mt-1 mb-1">Motion</div>
       <div
         className="flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
         draggable
