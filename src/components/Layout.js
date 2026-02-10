@@ -43,26 +43,93 @@ export default function Layout() {
   ]);
 
   const [activeScriptId, setActiveScriptId] = useState(1);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+
+  const clampPosition = (x, y) => {
+    if (stageSize.width <= 0 || stageSize.height <= 0) return { x, y };
+    const maxX = Math.max(0, stageSize.width - SPRITE_WIDTH);
+    const maxY = Math.max(0, stageSize.height - SPRITE_HEIGHT);
+    return {
+      x: Math.max(0, Math.min(maxX, x)),
+      y: Math.max(0, Math.min(maxY, y)),
+    };
+  };
+
+  const MIN_CAT_SPACING = 30;
 
   const handleAddCat = () => {
     const nextSpriteId = getNextSpriteId(sprites, scripts);
     const nextScriptId = getNextScriptId(scripts);
 
-    setSprites((oldSprites) => [
-      ...oldSprites,
-      {
-        id: nextSpriteId,
-        x: 60,
-        y: 60,
-        originX: 60,
-        originY: 60,
-        directionMultiplier: 1,
-        initialX: 60,
-        initialY: 60,
-        initialDirection: 0,
-        initialDirectionMultiplier: 1,
-      },
-    ]);
+    setSprites((oldSprites) => {
+      if (oldSprites.length === 0) {
+        const newX = 40;
+        const newY = 40;
+        return [
+          {
+            id: nextSpriteId,
+            x: newX,
+            y: newY,
+            originX: newX,
+            originY: newY,
+            directionMultiplier: 1,
+            initialX: newX,
+            initialY: newY,
+            initialDirection: 0,
+            initialDirectionMultiplier: 1,
+          },
+        ];
+      }
+
+      const bottommostEdge = Math.max(
+        ...oldSprites.map((s) => s.y + SPRITE_HEIGHT)
+      );
+      const maxY = Math.max(...oldSprites.map((s) => s.y));
+      const ROW_Y_TOLERANCE = 50;
+      const bottomRowSprites = oldSprites.filter(
+        (s) => s.y >= maxY - ROW_Y_TOLERANCE
+      );
+      const rightmostEdgeOnBottomRow = Math.max(
+        ...bottomRowSprites.map((s) => s.x + SPRITE_WIDTH)
+      );
+
+      let newX = rightmostEdgeOnBottomRow + MIN_CAT_SPACING;
+      let newY = maxY;
+
+      const fitsOnCurrentRow =
+        stageSize.width <= 0 ||
+        newX + SPRITE_WIDTH <= stageSize.width;
+
+      if (!fitsOnCurrentRow) {
+        newX = 40;
+        newY = bottommostEdge + MIN_CAT_SPACING;
+      }
+
+      if (stageSize.width > 0) {
+        newX = Math.min(newX, stageSize.width - SPRITE_WIDTH);
+      }
+      if (stageSize.height > 0) {
+        newY = Math.min(newY, stageSize.height - SPRITE_HEIGHT);
+      }
+      newX = Math.max(0, newX);
+      newY = Math.max(0, newY);
+
+      return [
+        ...oldSprites,
+        {
+          id: nextSpriteId,
+          x: newX,
+          y: newY,
+          originX: newX,
+          originY: newY,
+          directionMultiplier: 1,
+          initialX: newX,
+          initialY: newY,
+          initialDirection: 0,
+          initialDirectionMultiplier: 1,
+        },
+      ];
+    });
 
     setScripts((oldScripts) => [
       ...oldScripts,
@@ -104,9 +171,10 @@ export default function Layout() {
   };
 
   const handleMoveSprite = (id, x, y) => {
+    const { x: cx, y: cy } = clampPosition(x, y);
     setSprites((oldSprites) =>
       oldSprites.map((sprite) =>
-        sprite.id === id ? { ...sprite, x, y } : sprite
+        sprite.id === id ? { ...sprite, x: cx, y: cy } : sprite
       )
     );
   };
@@ -287,12 +355,11 @@ export default function Layout() {
       );
 
       let repeatTimes = repeatBlock
-        ? parseInt(repeatBlock.times, 10) || 1
+        ? (() => {
+            const n = parseInt(repeatBlock.times, 10);
+            return isNaN(n) ? 1 : Math.max(0, n);
+          })()
         : 1;
-
-      if (repeatTimes < 1) {
-        repeatTimes = 1;
-      }
 
       for (let loopIndex = 0; loopIndex < repeatTimes; loopIndex++) {
         for (let i = 0; i < script.blocks.length; i++) {
@@ -303,13 +370,19 @@ export default function Layout() {
           }
 
           if (block.type === "control_wait") {
-            const seconds = parseFloat(block.seconds) || 1;
+            const seconds = (() => {
+              const n = parseFloat(block.seconds);
+              return isNaN(n) ? 0 : n;
+            })();
             await wait(seconds * 1000);
             continue;
           }
 
           if (block.type === "motion_move") {
-            const rawSteps = parseInt(block.steps, 10) || 0;
+            const rawSteps = (() => {
+              const n = parseInt(block.steps, 10);
+              return isNaN(n) ? 0 : n;
+            })();
             if (moveDirection[spriteId] === undefined) {
               const mult = sprites.find((s) => s.id === spriteId)?.directionMultiplier ?? 1;
               moveDirection[spriteId] = (rawSteps >= 0 ? 1 : -1) * mult;
@@ -323,9 +396,10 @@ export default function Layout() {
               setSprites((oldSprites) => {
                 const updated = oldSprites.map((sprite) => {
                   if (sprite.id === spriteId) {
+                    const { x } = clampPosition(sprite.x + direction, sprite.y);
                     return {
                       ...sprite,
-                      x: sprite.x + direction,
+                      x,
                     };
                   }
                   return sprite;
@@ -338,7 +412,10 @@ export default function Layout() {
               await wait(MOVE_STEP_DELAY_MS);
             }
           } else if (block.type === "motion_turn") {
-            const degrees = parseInt(block.degrees, 10) || 0;
+            const degrees = (() => {
+              const n = parseInt(block.degrees, 10);
+              return isNaN(n) ? 0 : n;
+            })();
 
             if (degrees !== 0) {
               setSprites((oldSprites) =>
@@ -354,29 +431,46 @@ export default function Layout() {
               await wait(TURN_DELAY_MS);
             }
           } else if (block.type === "motion_goto") {
-            const valueX = parseInt(block.x, 10) || 0;
-            const valueY = parseInt(block.y, 10) || 0;
+            const valueX = (() => {
+              const n = parseInt(block.x, 10);
+              return isNaN(n) ? 0 : n;
+            })();
+            const valueY = (() => {
+              const n = parseInt(block.y, 10);
+              return isNaN(n) ? 0 : n;
+            })();
 
-            setSprites((oldSprites) => {
-              const updated = oldSprites.map((sprite) => {
-                if (sprite.id !== spriteId) {
-                  return sprite;
-                }
+            const currentSprite = sprites.find((s) => s.id === spriteId);
+            const alreadyAtTarget =
+              currentSprite &&
+              Math.round(currentSprite.x) === valueX &&
+              Math.round(currentSprite.y) === valueY;
 
-                return {
-                  ...sprite,
-                  x: sprite.x + valueX,
-                  y: sprite.y - valueY,
-                };
+            if (!alreadyAtTarget) {
+              setSprites((oldSprites) => {
+                const updated = oldSprites.map((sprite) => {
+                  if (sprite.id !== spriteId) {
+                    return sprite;
+                  }
+                  const { x, y } = clampPosition(valueX, valueY);
+                  return {
+                    ...sprite,
+                    x,
+                    y,
+                  };
+                });
+                checkCollisionAndSwapDirectionsAndScripts(updated);
+                return updated;
               });
-              checkCollisionAndSwapDirectionsAndScripts(updated);
-              return updated;
-            });
+            }
 
             await wait(GOTO_DELAY_MS);
           } else if (block.type === "looks_say") {
             const text = block.text || "";
-            const seconds = parseFloat(block.seconds) || 1;
+            const seconds = (() => {
+              const n = parseFloat(block.seconds);
+              return isNaN(n) ? 0 : n;
+            })();
 
             setSprites((oldSprites) =>
               oldSprites.map((sprite) =>
@@ -403,7 +497,10 @@ export default function Layout() {
             );
           } else if (block.type === "looks_think") {
             const text = block.text || "";
-            const seconds = parseFloat(block.seconds) || 1;
+            const seconds = (() => {
+              const n = parseFloat(block.seconds);
+              return isNaN(n) ? 0 : n;
+            })();
 
             setSprites((oldSprites) =>
               oldSprites.map((sprite) =>
@@ -458,8 +555,8 @@ export default function Layout() {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-row">
-      <div className="flex-1 h-screen overflow-hidden flex flex-row bg-white border-t border-r border-gray-200 rounded-tr-xl mr-2">
+    <div className="h-full min-h-0 flex flex-row overflow-hidden">
+      <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex flex-row bg-white border-t border-r border-gray-200 rounded-tr-xl mr-2">
         <Sidebar />
         <MidArea
           scripts={scripts}
@@ -474,12 +571,13 @@ export default function Layout() {
           onRemoveBlock={handleRemoveBlock}
         />
       </div>
-      <div className="w-1/3 h-screen overflow-hidden flex flex-row bg-white border-t border-l border-gray-200 rounded-tl-xl ml-2">
+      <div className="w-1/3 min-w-0 min-h-0 overflow-hidden flex flex-row bg-white border-t border-l border-gray-200 rounded-tl-xl ml-2">
         <PreviewArea
           sprites={sprites}
           onMoveSprite={handleMoveSprite}
           onPlay={handlePlay}
           onReload={handleReload}
+          onStageSizeChange={(w, h) => setStageSize({ width: w, height: h })}
         />
       </div>
     </div>

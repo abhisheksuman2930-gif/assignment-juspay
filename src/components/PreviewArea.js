@@ -1,13 +1,31 @@
 import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
-import Button from "../common/Button";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload }) {
+const GRID_STEP = 10;
+
+export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [playDisabled, setPlayDisabled] = useState(false);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [selectedSpriteId, setSelectedSpriteId] = useState(1);
+
+  const selectedSprite =
+    selectedSpriteId != null
+      ? sprites?.find((s) => s.id === selectedSpriteId)
+      : null;
+
+  useEffect(() => {
+    if (
+      selectedSpriteId != null &&
+      sprites &&
+      !sprites.some((s) => s.id === selectedSpriteId)
+    ) {
+      setSelectedSpriteId(null);
+    }
+  }, [sprites, selectedSpriteId]);
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -44,6 +62,8 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload })
   const handleMouseDown = (id, event) => {
     if (!areaRef.current) return;
 
+    setSelectedSpriteId(id);
+
     const rect = areaRef.current.getBoundingClientRect();
     const sprite = sprites.find((item) => item.id === id);
 
@@ -72,6 +92,20 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload })
     };
   }, []);
 
+  useEffect(() => {
+    const el = areaRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      const w = Math.floor(width);
+      const h = Math.floor(height);
+      setStageSize({ width: w, height: h });
+      if (typeof onStageSizeChange === "function") onStageSizeChange(w, h);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onStageSizeChange]);
+
   const handleReloadClick = () => {
     if (typeof onReload === "function") {
       onReload();
@@ -80,56 +114,107 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload })
 
   return (
     <div className="flex-1 h-full overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between p-2 border-b border-gray-200">
-        <div className="text-sm font-semibold">Preview</div>
-        <div className="flex items-center space-x-2">
-          <Button variant="secondary" onClick={handleReloadClick}>
+      <div className="flex-shrink-0 px-3 py-2 border-b border-gray-200">
+        <div className="text-sm font-semibold text-gray-700">Preview</div>
+      </div>
+      <div className="flex-shrink-0 min-h-12 bg-black flex flex-col justify-center px-5 py-2 border-b border-gray-800">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-6 font-mono text-sm text-white tracking-wide">
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-xs uppercase">x</span>
+              <span className="font-semibold tabular-nums">
+                {selectedSprite != null ? Math.round(selectedSprite.x) : "—"}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-xs uppercase">y</span>
+              <span className="font-semibold tabular-nums">
+                {selectedSprite != null ? Math.round(selectedSprite.y) : "—"}
+              </span>
+            </span>
+            {selectedSprite != null && (
+              <span className="text-gray-500 text-xs ml-1">
+                (Cat {selectedSprite.id})
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleReloadClick}
+            className="h-8 px-4 rounded-md text-xs font-medium text-white bg-gray-700 border border-gray-600 hover:bg-gray-600 hover:border-gray-500 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-black"
+          >
             Reload
-          </Button>
-          <Button variant="success" onClick={handlePlayClick} disabled={playDisabled}>
+          </button>
+          <button
+            type="button"
+            onClick={handlePlayClick}
+            disabled={playDisabled}
+            className="h-8 px-4 rounded-md text-xs font-medium text-black bg-white border border-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+          >
             Play
-          </Button>
+          </button>
+        </div>
+        </div>
+        <div className="text-[10px] text-gray-500 mt-0.5">
+          Click on a cat to view its coordinates
         </div>
       </div>
-      <div
-        ref={areaRef}
-        className="flex-1 bg-gray-50 relative overflow-hidden"
-      >
-        {sprites &&
-          sprites.map((sprite) => (
-            <div
-              key={sprite.id}
-              style={{
-                position: "absolute",
-                left: sprite.x,
-                top: sprite.y,
-                cursor: "grab",
-                transform: `rotate(${sprite.direction || 0}deg)`,
-                transformOrigin: "center center",
-              }}
-              onMouseDown={(event) => handleMouseDown(sprite.id, event)}
-            >
-              {sprite.sayText && (
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-2 py-1 rounded shadow">
-                  {sprite.sayText}
-                </div>
-              )}
-              {sprite.thinkText && !sprite.sayText && (
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-2 py-1 rounded shadow italic">
-                  {sprite.thinkText}
-                </div>
-              )}
-              <CatSprite />
+      <div className="flex-1 bg-gray-50 relative overflow-hidden min-h-0 flex">
+        {stageSize.width > 0 && stageSize.height > 0 && (
+          <div className="w-1 flex-shrink-0 bg-gray-200/90 border-r border-gray-300 pointer-events-none" />
+        )}
+
+        <div className="flex-1 flex flex-col min-w-0">
+          {stageSize.width > 0 && stageSize.height > 0 && (
+            <div className="h-1 flex-shrink-0 bg-gray-200/90 border-b border-gray-300 pointer-events-none" />
+          )}
+
+          <div
+            ref={areaRef}
+            className="flex-1 relative overflow-hidden min-h-0"
+          >
+            {stageSize.width > 0 && stageSize.height > 0 && (
               <div
-                className="absolute bottom-0 left-1/2 mt-0.5 text-xs font-medium text-gray-600 whitespace-nowrap"
+                className="absolute inset-0 pointer-events-none opacity-40"
                 style={{
-                  transform: `translate(-50%, 100%) rotate(${-(sprite.direction || 0)}deg)`,
+                  backgroundImage: `
+                    linear-gradient(to right, #94a3b8 1px, transparent 1px),
+                    linear-gradient(to bottom, #94a3b8 1px, transparent 1px)
+                  `,
+                  backgroundSize: `${GRID_STEP}px ${GRID_STEP}px`,
                 }}
-              >
-                Cat {sprite.id}
-              </div>
-            </div>
-          ))}
+              />
+            )}
+            {sprites &&
+              sprites.map((sprite) => (
+                <div
+                  key={sprite.id}
+                  style={{
+                    position: "absolute",
+                    left: sprite.x,
+                    top: sprite.y,
+                    cursor: "grab",
+                    transform: `rotate(${sprite.direction || 0}deg)`,
+                    transformOrigin: "center center",
+                  }}
+                  onMouseDown={(event) => handleMouseDown(sprite.id, event)}
+                >
+                  {sprite.sayText && (
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-2 py-1 rounded shadow">
+                      {sprite.sayText}
+                    </div>
+                  )}
+                  {sprite.thinkText && !sprite.sayText && (
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-2 py-1 rounded shadow italic">
+                      {sprite.thinkText}
+                    </div>
+                  )}
+                  <CatSprite />
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
     </div>
   );

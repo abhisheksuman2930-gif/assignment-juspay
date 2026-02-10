@@ -57,48 +57,53 @@ export default function MidArea({
     event.preventDefault();
   };
 
+  const parseIntegerInput = (value) => {
+    if (value === "") return "";
+    const n = parseInt(value, 10);
+    return isNaN(n) ? value : n;
+  };
+
+  const parseFloatInput = (value) => {
+    if (value === "") return "";
+    const n = parseFloat(value);
+    return isNaN(n) ? value : n;
+  };
+
+  const displayNumber = (v) =>
+    v !== undefined && v !== null && v !== "" ? String(v) : "";
+
   const handleStepsChange = (blockId, event) => {
     const value = event.target.value;
-    const numberValue = parseInt(value, 10) || 0;
-
     if (typeof onChangeBlockValue === "function") {
-      onChangeBlockValue(blockId, { steps: numberValue });
+      onChangeBlockValue(blockId, { steps: parseIntegerInput(value) });
     }
   };
 
   const handleDegreesChange = (blockId, event) => {
     const value = event.target.value;
-    const numberValue = parseInt(value, 10) || 0;
-
     if (typeof onChangeBlockValue === "function") {
-      onChangeBlockValue(blockId, { degrees: numberValue });
+      onChangeBlockValue(blockId, { degrees: parseIntegerInput(value) });
     }
   };
 
   const handleGotoChange = (blockId, field, event) => {
     const value = event.target.value;
-    const numberValue = parseInt(value, 10) || 0;
-
     if (typeof onChangeBlockValue === "function") {
-      onChangeBlockValue(blockId, { [field]: numberValue });
+      onChangeBlockValue(blockId, { [field]: parseIntegerInput(value) });
     }
   };
 
   const handleRepeatChange = (blockId, event) => {
     const value = event.target.value;
-    const numberValue = parseInt(value, 10) || 0;
-
     if (typeof onChangeBlockValue === "function") {
-      onChangeBlockValue(blockId, { times: numberValue });
+      onChangeBlockValue(blockId, { times: parseIntegerInput(value) });
     }
   };
 
   const handleWaitSecondsChange = (blockId, event) => {
     const value = event.target.value;
-    const numberValue = parseFloat(value) || 0;
-
     if (typeof onChangeBlockValue === "function") {
-      onChangeBlockValue(blockId, { seconds: numberValue });
+      onChangeBlockValue(blockId, { seconds: parseFloatInput(value) });
     }
   };
 
@@ -112,10 +117,8 @@ export default function MidArea({
 
   const handleLooksSecondsChange = (blockId, event) => {
     const value = event.target.value;
-    const numberValue = parseFloat(value) || 0;
-
     if (typeof onChangeBlockValue === "function") {
-      onChangeBlockValue(blockId, { seconds: numberValue });
+      onChangeBlockValue(blockId, { seconds: parseFloatInput(value) });
     }
   };
 
@@ -147,7 +150,7 @@ export default function MidArea({
                           : "bg-gray-100 border border-gray-200 text-gray-600"
                       }`}
                     >
-                      <span>Sprite {sprite.id}</span>
+                      <span>Cat {sprite.id}</span>
                     </button>
                   ))}
                   {sprites.length > 1 && (
@@ -221,7 +224,7 @@ export default function MidArea({
                       <span>Move</span>
                       <input
                         type="number"
-                        value={block.steps ?? 0}
+                        value={displayNumber(block.steps)}
                         onChange={(event) =>
                           handleStepsChange(block.id, event)
                         }
@@ -249,7 +252,7 @@ export default function MidArea({
                       <span>Turn</span>
                       <input
                         type="number"
-                        value={block.degrees ?? 0}
+                        value={displayNumber(block.degrees)}
                         onChange={(event) =>
                           handleDegreesChange(block.id, event)
                         }
@@ -277,7 +280,7 @@ export default function MidArea({
                       <span>Go to x:</span>
                       <input
                         type="number"
-                        value={block.x ?? 0}
+                        value={displayNumber(block.x)}
                         onChange={(event) =>
                           handleGotoChange(block.id, "x", event)
                         }
@@ -286,7 +289,7 @@ export default function MidArea({
                       <span>y:</span>
                       <input
                         type="number"
-                        value={block.y ?? 0}
+                        value={displayNumber(block.y)}
                         onChange={(event) =>
                           handleGotoChange(block.id, "y", event)
                         }
@@ -313,7 +316,7 @@ export default function MidArea({
                       <span>Repeat</span>
                       <input
                         type="number"
-                        value={block.times ?? 5}
+                        value={displayNumber(block.times)}
                         onChange={(event) =>
                           handleRepeatChange(block.id, event)
                         }
@@ -343,7 +346,7 @@ export default function MidArea({
                         type="number"
                         min="0"
                         step="0.5"
-                        value={block.seconds ?? 1}
+                        value={displayNumber(block.seconds)}
                         onChange={(event) =>
                           handleWaitSecondsChange(block.id, event)
                         }
@@ -381,7 +384,7 @@ export default function MidArea({
                       <span>for</span>
                       <input
                         type="number"
-                        value={block.seconds ?? 2}
+                        value={displayNumber(block.seconds)}
                         onChange={(event) =>
                           handleLooksSecondsChange(block.id, event)
                         }
@@ -419,7 +422,7 @@ export default function MidArea({
                       <span>for</span>
                       <input
                         type="number"
-                        value={block.seconds ?? 2}
+                        value={displayNumber(block.seconds)}
                         onChange={(event) =>
                           handleLooksSecondsChange(block.id, event)
                         }
