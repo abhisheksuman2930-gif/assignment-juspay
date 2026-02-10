@@ -2,10 +2,19 @@ import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import MidArea from "./MidArea";
 import PreviewArea from "./PreviewArea";
+import {
+  SPRITE_HEIGHT,
+  SPRITE_WIDTH,
+  GOTO_DELAY_MS,
+  MOVE_STEP_DELAY_MS,
+  TURN_DELAY_MS,
+} from "../constant";
 import { createBlock } from "../utils/blocks";
 import {
   getNextSpriteId,
   getNextScriptId,
+  applyGotoOffset,
+  detectCollisionPair,
 } from "../utils/sprites";
 
 export default function Layout() {
@@ -68,6 +77,32 @@ export default function Layout() {
     setActiveScriptId(nextScriptId);
   };
 
+  const handleReload = () => {
+    setSprites([
+      {
+        id: 1,
+        x: 40,
+        y: 40,
+        originX: 40,
+        originY: 40,
+        directionMultiplier: 1,
+        initialX: 40,
+        initialY: 40,
+        initialDirection: 0,
+        initialDirectionMultiplier: 1,
+      },
+    ]);
+    setScripts([
+      {
+        id: 1,
+        spriteId: 1,
+        name: "Script 1",
+        blocks: [],
+      },
+    ]);
+    setActiveScriptId(1);
+  };
+
   const handleMoveSprite = (id, x, y) => {
     setSprites((oldSprites) =>
       oldSprites.map((sprite) =>
@@ -99,6 +134,9 @@ export default function Layout() {
     );
   };
 
+ 
+ 
+
   const handleChangeBlockValue = (blockId, changes) => {
     if (!blockId || !changes) return;
 
@@ -120,6 +158,37 @@ export default function Layout() {
     );
   };
 
+  const handleRemoveSprite = (spriteIdToRemove) => {
+    if (!spriteIdToRemove) {
+      return;
+    }
+
+    if (sprites.length <= 1) {
+      return;
+    }
+
+    const remainingSprites = sprites.filter(
+      (sprite) => sprite.id !== spriteIdToRemove
+    );
+    const remainingScriptsList = scripts.filter(
+      (script) => script.spriteId !== spriteIdToRemove
+    );
+
+    if (!remainingSprites.length) {
+      return;
+    }
+
+    setSprites(remainingSprites);
+    setScripts(remainingScriptsList);
+
+    const activeScript = scripts.find((s) => s.id === activeScriptId);
+    const stillHasActive =
+      activeScript && activeScript.spriteId !== spriteIdToRemove;
+
+    if (!stillHasActive && remainingScriptsList.length > 0) {
+      setActiveScriptId(remainingScriptsList[0].id);
+    }
+  };
 
   const handleRemoveBlock = (blockId) => {
     if (!blockId) {
@@ -140,10 +209,9 @@ export default function Layout() {
     );
   };
 
-const handlePlay=()=>{
-
-}
-
+  const handlePlay =()=>{
+    
+  }
   return (
     <div className="h-screen overflow-hidden flex flex-row">
       <div className="flex-1 h-screen overflow-hidden flex flex-row bg-white border-t border-r border-gray-200 rounded-tr-xl mr-2">
@@ -156,6 +224,7 @@ const handlePlay=()=>{
           onAddCat={handleAddCat}
           onDropBlock={handleDropBlock}
           onChangeBlockValue={handleChangeBlockValue}
+          onRemoveSprite={handleRemoveSprite}
           onRemoveBlock={handleRemoveBlock}
         />
       </div>
@@ -164,7 +233,7 @@ const handlePlay=()=>{
           sprites={sprites}
           onMoveSprite={handleMoveSprite}
           onPlay={handlePlay}
-        
+          onReload={handleReload}
         />
       </div>
     </div>

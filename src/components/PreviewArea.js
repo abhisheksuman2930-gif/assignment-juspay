@@ -3,7 +3,7 @@ import CatSprite from "./CatSprite";
 import Button from "../common/Button";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-export default function PreviewArea({ sprites, onMoveSprite, onPlay }) {
+export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -56,17 +56,32 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay }) {
     setDraggingId(id);
   };
 
+  const playCooldownRef = useRef(null);
 
-  const handlePlayClick =()=>{
+  const handlePlayClick = () => {
+ 
+  };
 
-  }
+  useEffect(() => {
+    return () => {
+      if (playCooldownRef.current) clearTimeout(playCooldownRef.current);
+    };
+  }, []);
+
+  const handleReloadClick = () => {
+    if (typeof onReload === "function") {
+      onReload();
+    }
+  };
 
   return (
     <div className="flex-1 h-full overflow-hidden flex flex-col">
       <div className="flex items-center justify-between p-2 border-b border-gray-200">
         <div className="text-sm font-semibold">Preview</div>
         <div className="flex items-center space-x-2">
-        
+          <Button variant="secondary" onClick={handleReloadClick}>
+            Reload
+          </Button>
           <Button variant="success" onClick={handlePlayClick} disabled={playDisabled}>
             Play
           </Button>
@@ -90,10 +105,22 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay }) {
               }}
               onMouseDown={(event) => handleMouseDown(sprite.id, event)}
             >
-             
+              {sprite.sayText && (
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-2 py-1 rounded shadow">
+                  {sprite.sayText}
+                </div>
+              )}
+              {sprite.thinkText && !sprite.sayText && (
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-white text-black text-xs px-2 py-1 rounded shadow italic">
+                  {sprite.thinkText}
+                </div>
+              )}
               <CatSprite />
               <div
                 className="absolute bottom-0 left-1/2 mt-0.5 text-xs font-medium text-gray-600 whitespace-nowrap"
+                style={{
+                  transform: `translate(-50%, 100%) rotate(${-(sprite.direction || 0)}deg)`,
+                }}
               >
                 Cat {sprite.id}
               </div>
