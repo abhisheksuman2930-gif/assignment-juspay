@@ -2,13 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
+export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, onStageSizeChange, selectedSpriteId = 1, onSelectSpriteId }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [playDisabled, setPlayDisabled] = useState(false);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
-  const [selectedSpriteId, setSelectedSpriteId] = useState(1);
 
   const selectedSprite =
     selectedSpriteId != null
@@ -19,11 +18,12 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
     if (
       selectedSpriteId != null &&
       sprites &&
-      !sprites.some((s) => s.id === selectedSpriteId)
+      !sprites.some((s) => s.id === selectedSpriteId) &&
+      typeof onSelectSpriteId === "function"
     ) {
-      setSelectedSpriteId(null);
+      onSelectSpriteId(sprites.length ? sprites[0].id : null);
     }
-  }, [sprites, selectedSpriteId]);
+  }, [sprites, selectedSpriteId, onSelectSpriteId]);
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -60,7 +60,7 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
   const handleMouseDown = (id, event) => {
     if (!areaRef.current) return;
 
-    setSelectedSpriteId(id);
+    if (typeof onSelectSpriteId === "function") onSelectSpriteId(id);
 
     const rect = areaRef.current.getBoundingClientRect();
     const sprite = sprites.find((item) => item.id === id);

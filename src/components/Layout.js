@@ -44,6 +44,7 @@ export default function Layout() {
 
   const [activeScriptId, setActiveScriptId] = useState(1);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [selectedSpriteId, setSelectedSpriteId] = useState(1);
 
   const clampPosition = (x, y) => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return { x, y };
@@ -142,6 +143,7 @@ export default function Layout() {
     ]);
 
     setActiveScriptId(nextScriptId);
+    setSelectedSpriteId(nextSpriteId);
   };
 
   const handleReload = () => {
@@ -168,6 +170,7 @@ export default function Layout() {
       },
     ]);
     setActiveScriptId(1);
+    setSelectedSpriteId(1);
   };
 
   const handleMoveSprite = (id, x, y) => {
@@ -259,6 +262,10 @@ export default function Layout() {
 
     setSprites(remainingSprites);
     setScripts(remainingScriptsList);
+
+    if (selectedSpriteId === spriteIdToRemove) {
+      setSelectedSpriteId(remainingSprites[0]?.id ?? null);
+    }
 
     const activeScript = scripts.find((s) => s.id === activeScriptId);
     const stillHasActive =
@@ -578,6 +585,8 @@ export default function Layout() {
           onPlay={handlePlay}
           onReload={handleReload}
           onStageSizeChange={(w, h) => setStageSize({ width: w, height: h })}
+          selectedSpriteId={selectedSpriteId}
+          onSelectSpriteId={setSelectedSpriteId}
         />
       </div>
     </div>
