@@ -299,10 +299,12 @@ export default function Layout() {
     );
   };
 
-  const handlePlay = () => {
+  const handlePlay = (optionalSpriteId) => {
     if (!sprites.length || !scripts.length) {
       return;
     }
+
+    const onlySpriteIds = optionalSpriteId ? [optionalSpriteId] : undefined;
 
     const moveDirection = {};
     let hasSwappedOnce = false;
@@ -549,8 +551,11 @@ export default function Layout() {
       scriptsBySpriteId[script.spriteId].push(script);
     });
 
-    const runAll = async () => {
-      const jobs = sprites.map((sprite) => {
+    const runAll = async (onlySpriteIds) => {
+      const spritesToRun = onlySpriteIds
+        ? sprites.filter((s) => onlySpriteIds.includes(s.id))
+        : sprites;
+      const jobs = spritesToRun.map((sprite) => {
         const scriptsForSprite = scriptsBySpriteId[sprite.id] || [];
         const runAllScriptsForThisSprite = async () => {
           for (const script of scriptsForSprite) {
@@ -562,7 +567,12 @@ export default function Layout() {
       await Promise.all(jobs);
     };
 
-    runAll();
+    runAll(onlySpriteIds);
+  };
+
+  const handleRunSpriteScript = (spriteId) => {
+    if (!spriteId || !sprites.length || !scripts.length) return;
+    handlePlay(spriteId);
   };
 
   return (
@@ -587,6 +597,7 @@ export default function Layout() {
           sprites={sprites}
           activeSpriteId={activeSpriteId}
           onSelectSprite={handleSelectSprite}
+          onRunSpriteScript={handleRunSpriteScript}
           onMoveSprite={handleMoveSprite}
           onPlay={handlePlay}
           onReload={handleReload}

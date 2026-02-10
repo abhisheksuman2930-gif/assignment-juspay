@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
+export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, onRunSpriteScript, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -51,6 +51,9 @@ export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, o
 
     if (typeof onSelectSprite === "function") {
       onSelectSprite(id);
+    }
+    if (typeof onRunSpriteScript === "function") {
+      onRunSpriteScript(id);
     }
 
     const rect = areaRef.current.getBoundingClientRect();
