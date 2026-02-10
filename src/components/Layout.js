@@ -44,7 +44,6 @@ export default function Layout() {
 
   const [activeScriptId, setActiveScriptId] = useState(1);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
-  const [selectedSpriteId, setSelectedSpriteId] = useState(1);
 
   const clampPosition = (x, y) => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return { x, y };
@@ -143,7 +142,6 @@ export default function Layout() {
     ]);
 
     setActiveScriptId(nextScriptId);
-    setSelectedSpriteId(nextSpriteId);
   };
 
   const handleReload = () => {
@@ -170,7 +168,6 @@ export default function Layout() {
       },
     ]);
     setActiveScriptId(1);
-    setSelectedSpriteId(1);
   };
 
   const handleMoveSprite = (id, x, y) => {
@@ -263,16 +260,23 @@ export default function Layout() {
     setSprites(remainingSprites);
     setScripts(remainingScriptsList);
 
-    if (selectedSpriteId === spriteIdToRemove) {
-      setSelectedSpriteId(remainingSprites[0]?.id ?? null);
-    }
-
     const activeScript = scripts.find((s) => s.id === activeScriptId);
     const stillHasActive =
       activeScript && activeScript.spriteId !== spriteIdToRemove;
 
     if (!stillHasActive && remainingScriptsList.length > 0) {
       setActiveScriptId(remainingScriptsList[0].id);
+    }
+  };
+
+  const activeScript = scripts.find((s) => s.id === activeScriptId);
+  const activeSpriteId =
+    activeScript?.spriteId ?? sprites[0]?.id ?? null;
+
+  const handleSelectSprite = (spriteId) => {
+    const scriptForSprite = scripts.find((s) => s.spriteId === spriteId);
+    if (scriptForSprite) {
+      setActiveScriptId(scriptForSprite.id);
     }
   };
 
@@ -308,7 +312,7 @@ export default function Layout() {
         setTimeout(resolve, ms);
       });
 
-    const checkCollisionAndSwapDirections = (currentSprites) => {
+    const checkCollisionAndSwapDirectionsAndScripts = (currentSprites) => {
       if (hasSwappedOnce) {
         return;
       }
@@ -338,6 +342,14 @@ export default function Layout() {
           if (s.id === idA) return { ...s, directionMultiplier: multB };
           if (s.id === idB) return { ...s, directionMultiplier: multA };
           return s;
+        })
+      );
+
+      setScripts((oldScripts) =>
+        oldScripts.map((script) => {
+          if (script.spriteId === idA) return { ...script, spriteId: idB };
+          if (script.spriteId === idB) return { ...script, spriteId: idA };
+          return script;
         })
       );
 
@@ -404,7 +416,7 @@ export default function Layout() {
                   return sprite;
                 });
 
-                checkCollisionAndSwapDirections(updated);
+                checkCollisionAndSwapDirectionsAndScripts(updated);
                 return updated;
               });
 
@@ -458,7 +470,7 @@ export default function Layout() {
                     y,
                   };
                 });
-                checkCollisionAndSwapDirections(updated);
+                checkCollisionAndSwapDirectionsAndScripts(updated);
                 return updated;
               });
             }
@@ -561,11 +573,7 @@ export default function Layout() {
           scripts={scripts}
           sprites={sprites}
           activeScriptId={activeScriptId}
-          onSelectScript={(scriptId) => {
-            setActiveScriptId(scriptId);
-            const script = scripts.find((s) => s.id === scriptId);
-            if (script) setSelectedSpriteId(script.spriteId);
-          }}
+          onSelectScript={setActiveScriptId}
           onAddCat={handleAddCat}
           onDropBlock={handleDropBlock}
           onChangeBlockValue={handleChangeBlockValue}
@@ -577,12 +585,12 @@ export default function Layout() {
       <div className="w-1/3 min-w-0 min-h-0 overflow-hidden flex flex-row bg-white border-t border-l border-gray-200 rounded-tl-xl ml-2">
         <PreviewArea
           sprites={sprites}
+          activeSpriteId={activeSpriteId}
+          onSelectSprite={handleSelectSprite}
           onMoveSprite={handleMoveSprite}
           onPlay={handlePlay}
           onReload={handleReload}
           onStageSizeChange={(w, h) => setStageSize({ width: w, height: h })}
-          selectedSpriteId={selectedSpriteId}
-          onSelectSpriteId={setSelectedSpriteId}
         />
       </div>
     </div>

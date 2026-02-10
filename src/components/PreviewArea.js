@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, onStageSizeChange, selectedSpriteId = 1, onSelectSpriteId }) {
+export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -10,20 +10,9 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   const selectedSprite =
-    selectedSpriteId != null
-      ? sprites?.find((s) => s.id === selectedSpriteId)
+    activeSpriteId != null
+      ? sprites?.find((s) => s.id === activeSpriteId)
       : null;
-
-  useEffect(() => {
-    if (
-      selectedSpriteId != null &&
-      sprites &&
-      !sprites.some((s) => s.id === selectedSpriteId) &&
-      typeof onSelectSpriteId === "function"
-    ) {
-      onSelectSpriteId(sprites.length ? sprites[0].id : null);
-    }
-  }, [sprites, selectedSpriteId, onSelectSpriteId]);
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -60,7 +49,9 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
   const handleMouseDown = (id, event) => {
     if (!areaRef.current) return;
 
-    if (typeof onSelectSpriteId === "function") onSelectSpriteId(id);
+    if (typeof onSelectSprite === "function") {
+      onSelectSprite(id);
+    }
 
     const rect = areaRef.current.getBoundingClientRect();
     const sprite = sprites.find((item) => item.id === id);
@@ -154,11 +145,8 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
           </button>
         </div>
         </div>
-        <div className="text-[10px] text-gray-500 mt-0.5">
-          Click on a cat to view its coordinates
-        </div>
       </div>
-      <div className="flex-1 bg-white relative overflow-hidden min-h-0 flex">
+      <div className="flex-1 bg-gray-50 relative overflow-hidden min-h-0 flex">
         {stageSize.width > 0 && stageSize.height > 0 && (
           <div className="w-1 flex-shrink-0 bg-gray-200/90 border-r border-gray-300 pointer-events-none" />
         )}
@@ -170,7 +158,7 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
 
           <div
             ref={areaRef}
-            className="flex-1 relative overflow-hidden min-h-0 bg-white"
+            className="flex-1 relative overflow-hidden min-h-0"
           >
             {sprites &&
               sprites.map((sprite) => (
@@ -197,12 +185,7 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload, o
                     </div>
                   )}
                   <CatSprite />
-                  <div
-                    className="absolute bottom-0 left-1/2 mt-0.5 text-[10px] font-medium text-gray-600 whitespace-nowrap"
-                    style={{
-                      transform: `translate(-50%, 100%) rotate(${-(sprite.direction || 0)}deg)`,
-                    }}
-                  >
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-0.5 text-[10px] text-gray-600 font-medium whitespace-nowrap pointer-events-none">
                     Cat {sprite.id}
                   </div>
                 </div>
