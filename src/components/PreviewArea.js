@@ -148,6 +148,10 @@ export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, o
           </button>
         </div>
         </div>
+        <div className="text-[9px] text-gray-400 font-light mt-1 space-y-0.5">
+          <div>• Click on cat to view coordinates</div>
+          <div>• Click on cat to run that particular cat script</div>
+        </div>
       </div>
       <div className="flex-1 bg-gray-50 relative overflow-hidden min-h-0 flex">
         {stageSize.width > 0 && stageSize.height > 0 && (
