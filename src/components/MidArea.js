@@ -10,6 +10,7 @@ export default function MidArea({
   onAddCat,
   onDropBlock,
   onChangeBlockValue,
+  onClearScript,
   onRemoveSprite,
   onRemoveBlock,
 }) {
@@ -29,7 +30,11 @@ export default function MidArea({
     }
   };
 
-
+  const handleClearScriptClick = () => {
+    if (typeof onClearScript === "function") {
+      onClearScript();
+    }
+  };
 
   const handleRemoveSpriteClick = (spriteId, event) => {
     if (event) {
@@ -160,7 +165,9 @@ export default function MidArea({
             })}
         </div>
         <div className="flex items-center space-x-2">
-         
+          <Button variant="secondary" onClick={handleClearScriptClick}>
+            Clear blocks
+          </Button>
           <Button variant="primary" onClick={handleAddCatClick}>
             Add cat sprite
           </Button>

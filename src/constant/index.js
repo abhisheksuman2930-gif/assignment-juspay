@@ -1,3 +1,4 @@
+
 export const SPRITE_WIDTH = 90;
 export const SPRITE_HEIGHT = 100;
 

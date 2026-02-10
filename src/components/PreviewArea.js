@@ -59,7 +59,11 @@ export default function PreviewArea({ sprites, onMoveSprite, onPlay, onReload })
   const playCooldownRef = useRef(null);
 
   const handlePlayClick = () => {
- 
+    if (playDisabled || typeof onPlay !== "function") return;
+    setPlayDisabled(true);
+    onPlay();
+    if (playCooldownRef.current) clearTimeout(playCooldownRef.current);
+    playCooldownRef.current = setTimeout(() => setPlayDisabled(false), 500);
   };
 
   useEffect(() => {

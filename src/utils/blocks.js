@@ -1,3 +1,4 @@
+
 export function createBlock(type, nextId) {
   const base = { id: nextId, type };
 
