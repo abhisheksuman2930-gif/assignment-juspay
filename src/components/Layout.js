@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import MidArea from "./MidArea";
 import PreviewArea from "./PreviewArea";
@@ -44,6 +44,7 @@ export default function Layout() {
 
   const [activeScriptId, setActiveScriptId] = useState(1);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const stopRequestedRef = useRef(false);
 
   const clampPosition = (x, y) => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return { x, y };
@@ -145,6 +146,7 @@ export default function Layout() {
   };
 
   const handleReload = () => {
+    stopRequestedRef.current = true;
     setSprites([
       {
         id: 1,
@@ -304,6 +306,7 @@ export default function Layout() {
       return;
     }
 
+    stopRequestedRef.current = false;
     const onlySpriteIds = optionalSpriteId ? [optionalSpriteId] : undefined;
 
     const moveDirection = {};
@@ -375,7 +378,9 @@ export default function Layout() {
         : 1;
 
       for (let loopIndex = 0; loopIndex < repeatTimes; loopIndex++) {
+        if (stopRequestedRef.current) return;
         for (let i = 0; i < script.blocks.length; i++) {
+          if (stopRequestedRef.current) return;
           const block = script.blocks[i];
 
           if (block.type === "control_repeat") {
@@ -388,6 +393,7 @@ export default function Layout() {
               return isNaN(n) ? 0 : n;
             })();
             await wait(seconds * 1000);
+            if (stopRequestedRef.current) return;
             continue;
           }
 
@@ -423,6 +429,7 @@ export default function Layout() {
               });
 
               await wait(MOVE_STEP_DELAY_MS);
+              if (stopRequestedRef.current) return;
             }
           } else if (block.type === "motion_turn") {
             const degrees = (() => {
@@ -442,6 +449,7 @@ export default function Layout() {
                 )
               );
               await wait(TURN_DELAY_MS);
+              if (stopRequestedRef.current) return;
             }
           } else if (block.type === "motion_goto") {
             const valueX = (() => {
@@ -478,6 +486,7 @@ export default function Layout() {
             }
 
             await wait(GOTO_DELAY_MS);
+            if (stopRequestedRef.current) return;
           } else if (block.type === "looks_say") {
             const text = block.text || "";
             const seconds = (() => {
@@ -497,6 +506,7 @@ export default function Layout() {
             );
 
             await wait(seconds * 1000);
+            if (stopRequestedRef.current) return;
 
             setSprites((oldSprites) =>
               oldSprites.map((sprite) =>
@@ -527,6 +537,7 @@ export default function Layout() {
             );
 
             await wait(seconds * 1000);
+            if (stopRequestedRef.current) return;
 
             setSprites((oldSprites) =>
               oldSprites.map((sprite) =>
@@ -575,6 +586,10 @@ export default function Layout() {
     handlePlay(spriteId);
   };
 
+  const handleStop = () => {
+    stopRequestedRef.current = true;
+  };
+
   return (
     <div className="h-full min-h-0 flex flex-row overflow-hidden">
       <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex flex-row bg-white border-t border-r border-gray-200 rounded-tr-xl mr-2">
@@ -600,6 +615,7 @@ export default function Layout() {
           onRunSpriteScript={handleRunSpriteScript}
           onMoveSprite={handleMoveSprite}
           onPlay={handlePlay}
+          onStop={handleStop}
           onReload={handleReload}
           onStageSizeChange={(w, h) => setStageSize({ width: w, height: h })}
         />

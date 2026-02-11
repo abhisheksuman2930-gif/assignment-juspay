@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
-export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, onRunSpriteScript, onMoveSprite, onPlay, onReload, onStageSizeChange }) {
+export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, onRunSpriteScript, onMoveSprite, onPlay, onStop, onReload, onStageSizeChange }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -145,6 +145,13 @@ export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, o
             className="h-8 px-4 rounded-md text-xs font-medium text-black bg-white border border-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
           >
             Play
+          </button>
+          <button
+            type="button"
+            onClick={() => typeof onStop === "function" && onStop()}
+            className="h-8 px-4 rounded-md text-xs font-medium text-white bg-red-600 border border-red-500 hover:bg-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-black"
+          >
+            Stop
           </button>
         </div>
         </div>
