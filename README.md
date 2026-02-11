@@ -16,6 +16,8 @@ Build for production:
 ```bash
 npm run build
 ```
+vercel deploy link - https://scratch-assignment-juspay.vercel.app/
+video link - https://drive.google.com/file/d/19LbUhlS2dytQ4YtcfGVMV4ILabWXe9nv/view
 
 ## Features
 
