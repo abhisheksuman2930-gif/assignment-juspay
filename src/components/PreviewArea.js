@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import CatSprite from "./CatSprite";
 import { SPRITE_HEIGHT, SPRITE_WIDTH } from "../constant";
 
+const CLICK_MAX_MOVE_PX = 6;
+
 export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, onRunSpriteScript, onMoveSprite, onPlay, onStop, onReload, onStageSizeChange }) {
   const areaRef = useRef(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [playDisabled, setPlayDisabled] = useState(false);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const mousedownRef = useRef(null);
 
   const selectedSprite =
     activeSpriteId != null
@@ -31,7 +34,15 @@ export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, o
       onMoveSprite(draggingId, x, y);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (event) => {
+      if (draggingId && mousedownRef.current && mousedownRef.current.spriteId === draggingId) {
+        const dx = event.clientX - mousedownRef.current.clientX;
+        const dy = event.clientY - mousedownRef.current.clientY;
+        if (dx * dx + dy * dy < CLICK_MAX_MOVE_PX * CLICK_MAX_MOVE_PX && typeof onRunSpriteScript === "function") {
+          onRunSpriteScript(draggingId);
+        }
+      }
+      mousedownRef.current = null;
       if (draggingId) {
         setDraggingId(null);
       }
@@ -44,17 +55,19 @@ export default function PreviewArea({ sprites, activeSpriteId, onSelectSprite, o
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [draggingId, dragOffset, onMoveSprite]);
+  }, [draggingId, dragOffset, onMoveSprite, onRunSpriteScript]);
 
   const handleMouseDown = (id, event) => {
     if (!areaRef.current) return;
 
+    if (typeof onStop === "function") {
+      onStop();
+    }
     if (typeof onSelectSprite === "function") {
       onSelectSprite(id);
     }
-    if (typeof onRunSpriteScript === "function") {
-      onRunSpriteScript(id);
-    }
+
+    mousedownRef.current = { spriteId: id, clientX: event.clientX, clientY: event.clientY };
 
     const rect = areaRef.current.getBoundingClientRect();
     const sprite = sprites.find((item) => item.id === id);
